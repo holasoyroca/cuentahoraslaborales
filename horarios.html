@@ -2,100 +2,159 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Calculadora V9 - Con Informe de Errores</title>
+    <title>Control de Horas - Restaurante</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 950px; margin: 20px auto; padding: 20px; background-color: #f4f6f8; }
-        h1 { color: #2c3e50; text-align: center; margin-bottom: 5px;}
-        p.subtitle { text-align: center; color: #666; font-size: 14px; margin-bottom: 20px; }
         
-        .panel { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        h1 { color: #2c3e50; text-align: center; margin-bottom: 5px; font-weight: 700; letter-spacing: -0.5px; }
+        p.subtitle { text-align: center; color: #7f8c8d; font-size: 15px; margin-bottom: 25px; margin-top: 5px; max-width: 600px; margin-left: auto; margin-right: auto;}
         
-        textarea { width: 100%; height: 150px; padding: 12px; border: 1px solid #ced4da; border-radius: 6px; font-family: monospace; font-size: 13px; box-sizing: border-box; resize: vertical; }
-        textarea:focus { border-color: #80bdff; outline: none; box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25); }
+        .panel { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #eaellfb; }
         
-        button { background-color: #007bff; color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: 600; width: 100%; transition: background 0.2s; margin-top: 10px;}
-        button:hover { background-color: #0069d9; }
+        textarea { width: 100%; height: 100px; padding: 12px; border: 1px solid #dfe6e9; border-radius: 6px; font-family: monospace; font-size: 13px; box-sizing: border-box; resize: vertical; transition: border 0.3s; }
+        textarea:focus { border-color: #3498db; outline: none; box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1); }
+        
+        button { background-color: #007bff; color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: 600; width: 100%; transition: background 0.2s; margin-top: 15px; box-shadow: 0 2px 5px rgba(0,123,255,0.2); }
+        button:hover { background-color: #0069d9; transform: translateY(-1px); }
 
-        .total-box { font-size: 36px; font-weight: 700; color: #2c3e50; text-align: center; margin-bottom: 5px; }
-        .subtotal { text-align: center; color: #6c757d; font-size: 14px; margin-bottom: 25px; }
+        /* Estilo del total y del nombre */
+        .total-container { text-align: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px dashed #eee; }
+        .total-box { font-size: 52px; font-weight: 800; color: #27ae60; text-shadow: 0 2px 4px rgba(39, 174, 96, 0.1); line-height: 1; margin-bottom: 5px;}
+        .nombre-empleado { font-size: 22px; color: #34495e; font-weight: 500; display: block; margin-top: 0; }
 
-        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 10px; font-size: 14px; border: 1px solid #dee2e6; border-radius: 6px; overflow: hidden; }
-        th { background-color: #343a40; color: white; padding: 15px; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;}
-        td { padding: 12px 15px; border-bottom: 1px solid #dee2e6; color: #495057; vertical-align: middle; }
+        .subtotal { text-align: center; color: #95a5a6; font-size: 13px; margin-bottom: 20px; }
+
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 10px; font-size: 14px; border: 1px solid #ecf0f1; border-radius: 8px; overflow: hidden; }
+        th { background-color: #34495e; color: white; padding: 15px; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 1px;}
+        td { padding: 10px 15px; border-bottom: 1px solid #ecf0f1; color: #2c3e50; vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
         
-        /* Estados de tabla */
+        .time-input { padding: 6px 8px; border: 1px solid #bdc3c7; border-radius: 4px; font-family: monospace; font-size: 15px; width: 85px; text-align: center; background-color: #f9f9f9; color: #2c3e50; font-weight: 500; transition: all 0.2s; }
+        .time-input:focus { outline: none; border-color: #3498db; background: #fff; box-shadow: 0 0 0 2px rgba(52,152,219,0.1);}
+        .input-error { border: 2px solid #e74c3c; background-color: #fdedec; }
+
         .fila-ok { background-color: #ffffff; }
-        .fila-ok:hover { background-color: #f8f9fa; }
-        .fila-error { background-color: #ffeef0; }
-        .fila-warning { background-color: #fff3cd; color: #856404; }
+        .fila-error { background-color: #fff5f5; }
+        .fila-warning { background-color: #fef9e7; color: #f39c12; }
+        .fila-fixed { background-color: #eafaf1; transition: background 0.5s; } 
+
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; color: white; text-transform: uppercase; letter-spacing: 0.5px;}
+        .bg-ok { background-color: #2ecc71; }
+        .bg-err { background-color: #e74c3c; }
+        .bg-warn { background-color: #f1c40f; color: #34495e; }
+        .bg-fix { background-color: #3498db; }
+
+        .error-report { margin-top: 30px; padding: 20px; background-color: #fdedec; border: 1px solid #fadbd8; border-radius: 8px; display: none; }
+        .error-report h3 { margin-top: 0; font-size: 16px; color: #c0392b; display: flex; align-items: center; gap: 8px;}
+        .error-list { padding-left: 20px; margin-bottom: 0; }
+        .error-list li { margin-bottom: 6px; font-size: 13px; color: #c0392b; }
         
-        .badge { display: inline-block; padding: 5px 10px; border-radius: 50px; font-size: 11px; font-weight: 700; color: white; text-transform: uppercase; letter-spacing: 0.5px;}
-        .bg-ok { background-color: #28a745; }
-        .bg-err { background-color: #dc3545; }
-        .bg-warn { background-color: #ffc107; color: #212529; }
-        
-        /* Panel de Informe de Errores */
-        .error-report {
-            margin-top: 30px;
-            padding: 20px;
-            background-color: #fff5f5;
-            border: 1px solid #f5c6cb;
-            border-radius: 8px;
-            display: none; /* Se oculta si no hay errores */
+        .cell-horas { font-weight: bold; font-size: 15px; font-feature-settings: "tnum"; font-variant-numeric: tabular-nums; }
+
+        /* Footer discreto */
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e1e4e8;
+            color: #bdc3c7;
+            font-size: 12px;
         }
-        .error-report h3 { margin-top: 0; color: #dc3545; font-size: 18px; display: flex; align-items: center; gap: 10px;}
-        .error-list { list-style: none; padding: 0; margin: 0; }
-        .error-list li { padding: 8px 0; border-bottom: 1px dashed #ffdbe0; font-size: 14px; color: #721c24; }
-        .error-list li:last-child { border-bottom: none; }
-        
-        .icon-dup { color: #856404; font-weight: bold; } /* Icono para duplicados */
-        .icon-miss { color: #dc3545; font-weight: bold; } /* Icono para falta salida */
+        .footer a {
+            color: #bdc3c7;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .footer a:hover {
+            color: #7f8c8d;
+            text-decoration: underline;
+        }
+        .version {
+            font-family: monospace;
+            background: #eee;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #999;
+        }
 
     </style>
 </head>
 <body>
 
     <div class="panel">
-        <h1>📊 Calculadora V9 (Con Informe)</h1>
-        <p class="subtitle">Elimina duplicados, corrige turnos y genera un resumen de fallos al final.</p>
-        <textarea id="inputData" placeholder="Pega aquí los datos..."></textarea>
-        <button onclick="procesarDatos()">Calcular Horas</button>
+        <h1>Control de Horas y Fichajes</h1>
+        <p class="subtitle">Herramienta inteligente con detección de empleados, corrección automática de turnos de noche y limpieza de duplicados.</p>
+        
+        <textarea id="inputData" placeholder="Pega aquí el contenido de tu archivo Excel o CSV..."></textarea>
+        <button onclick="procesarDatos()">Procesar Datos</button>
     </div>
 
     <div id="resultado" class="panel" style="display:none;">
-        <div class="total-box"><span id="granTotal">0.00</span> h</div>
+        
+        <div class="total-container">
+            <div class="total-box"><span id="granTotal">0.00</span> h</div>
+            <span id="displayNombre" class="nombre-empleado"></span>
+        </div>
+
         <div class="subtotal" id="resumenTexto"></div>
 
         <table id="tablaResultados">
             <thead>
                 <tr>
-                    <th>Fecha</th>
-                    <th>Entrada</th>
-                    <th>Salida</th>
-                    <th>Duración</th>
-                    <th>Estado</th>
+                    <th width="15%">Fecha</th>
+                    <th width="20%">Entrada</th>
+                    <th width="20%">Salida</th>
+                    <th width="15%">Horas</th>
+                    <th>Estado / Notas</th>
                 </tr>
             </thead>
             <tbody id="cuerpoTabla"></tbody>
         </table>
 
         <div id="panelErrores" class="error-report">
-            <h3>📝 Resumen de Incidencias</h3>
+            <h3>⚠️ Incidencias detectadas</h3>
             <ul id="listaErrores" class="error-list"></ul>
         </div>
     </div>
 
+    <div class="footer">
+        <span class="version">v12.0</span> &bull; Código fuente disponible en <a href="https://github.com/holasoyroca/cuentahoraslaborales" target="_blank">GitHub</a>
+    </div>
+
     <script>
+        let incidencias = [];
+
         function procesarDatos() {
             const text = document.getElementById('inputData').value;
+            // Regex flexible para capturar fechas y horas
             const regexFull = /(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4}).*?(\d{1,2}):(\d{2})(?::(\d{2}))?/;
             const lines = text.split(/\r?\n/);
             let rawTimestamps = [];
-            let logIncidencias = []; // Array para guardar los mensajes de error
+            incidencias = [];
+            let nombreEncontrado = "";
 
-            // 1. LEER TODO
+            // 1. LEER DATOS Y BUSCAR NOMBRE
             for (let line of lines) {
-                const match = line.match(regexFull);
+                const lineClean = line.trim();
+                if (!lineClean) continue;
+
+                // Intentar extraer el nombre de la primera línea válida
+                if (!nombreEncontrado && regexFull.test(lineClean)) {
+                    // Separar por tabulaciones o espacios múltiples
+                    let parts = lineClean.split('\t');
+                    if (parts.length < 2) parts = lineClean.split(/\s{2,}/); // Si no hay tabs, busca 2 o más espacios
+                    
+                    if (parts.length >= 2) {
+                        // Asumimos que la col 2 es el nombre
+                        let nombreRaw = parts[1].trim();
+                        // Ignorar si parece una fecha o hora
+                        if (nombreRaw && isNaN(parseInt(nombreRaw[0]))) {
+                             nombreEncontrado = nombreRaw.charAt(0).toUpperCase() + nombreRaw.slice(1).toLowerCase();
+                        }
+                    }
+                }
+
+                const match = lineClean.match(regexFull);
                 if (match) {
                     const d = new Date(match[3], match[2] - 1, match[1], match[4], match[5], match[6] || 0);
                     rawTimestamps.push(d);
@@ -103,138 +162,186 @@
             }
 
             if (rawTimestamps.length === 0) {
-                alert("No encontré fechas válidas.");
+                alert("No se encontraron fechas válidas en el texto pegado.");
                 return;
             }
+
+            // Mostrar nombre si existe
+            const spanNombre = document.getElementById('displayNombre');
+            spanNombre.innerText = nombreEncontrado ? nombreEncontrado : "";
 
             // 2. ORDENAR CRONOLÓGICAMENTE
             rawTimestamps.sort((a, b) => a - b);
 
-            // --- FILTRO ANTI-PÁNICO (DUPLICADOS) ---
+            // 3. LIMPIAR DUPLICADOS (FILTRO ANTI-PÁNICO)
             let timestamps = [];
-            
             if (rawTimestamps.length > 0) {
                 timestamps.push(rawTimestamps[0]);
-                
                 for (let i = 1; i < rawTimestamps.length; i++) {
                     let actual = rawTimestamps[i];
                     let previo = timestamps[timestamps.length - 1];
-                    let diffMinutos = (actual - previo) / (1000 * 60);
+                    let diffMin = (actual - previo) / (1000 * 60);
                     
-                    if (diffMinutos < 30) {
-                        // LOG DE DUPLICADO
-                        logIncidencias.push(`<span class="icon-dup">🧹 Duplicado eliminado:</span> El ${fmtD(actual)} a las ${fmt(actual)} (demasiado cerca del anterior).`);
+                    // Si hay menos de 30 min, es duplicado
+                    if (diffMin < 30) {
+                        incidencias.push(`🧹 <strong>Duplicado eliminado:</strong> ${fmtFull(actual)} (demasiado cerca del anterior).`);
                     } else {
                         timestamps.push(actual);
                     }
                 }
             }
 
-            // 3. LÓGICA PRINCIPAL
+            // 4. LÓGICA DE TURNOS
             let html = "";
-            let totalHoras = 0;
             let entradaPendiente = null;
             let countOk = 0;
-            let countErr = 0;
 
             for (let i = 0; i < timestamps.length; i++) {
                 let actual = timestamps[i];
                 let hora = actual.getHours();
-                let esHorarioSalidaMadrugada = (hora >= 0 && hora < 6);
+                // Definición de madrugada: 00:00 a 06:00
+                let esMadrugada = (hora >= 0 && hora < 6);
 
-                if (entradaPendiente == null) {
-                    if (esHorarioSalidaMadrugada) {
-                        html += filaWarning(actual, "Salida suelta (Madrugada)");
-                        logIncidencias.push(`<span class="icon-dup">⚠️ Salida ignorada:</span> ${fmtD(actual)} a las ${fmt(actual)} (es de madrugada y no había entrada previa).`);
+                if (!entradaPendiente) {
+                    // BUSCANDO ENTRADA
+                    if (esMadrugada) {
+                        html += generarFila(null, actual, 0, "WARNING", "Salida suelta (Madrugada)");
                     } else {
                         entradaPendiente = actual;
                     }
                 } else {
+                    // BUSCANDO SALIDA PARA LA ENTRADA PENDIENTE
                     let diffHoras = (actual - entradaPendiente) / (1000 * 60 * 60);
                     let esMismoDia = actual.getDate() === entradaPendiente.getDate();
-                    let esSalidaValida = true;
+                    
+                    // Validaciones de salida válida
+                    let esValida = true;
+                    if (!esMismoDia && hora >= 6) esValida = false; // "Reset" de mañana
+                    if (diffHoras > 16) esValida = false; // Turno demasiado largo
 
-                    if (!esMismoDia && hora >= 6) { esSalidaValida = false; }
-                    if (diffHoras > 16) { esSalidaValida = false; }
-
-                    if (esSalidaValida) {
-                        html += filaOk(entradaPendiente, actual, diffHoras);
-                        totalHoras += diffHoras;
+                    if (esValida) {
+                        html += generarFila(entradaPendiente, actual, diffHoras, "OK", "");
                         countOk++;
-                        entradaPendiente = null; 
+                        entradaPendiente = null;
                     } else {
-                        html += filaError(entradaPendiente, "Falta fichar salida");
+                        // Error: Se quedó abierta la entrada anterior
+                        html += generarFila(entradaPendiente, null, 0, "ERROR", "Falta Salida");
                         
-                        // LOG DE ERROR
-                        logIncidencias.push(`<span class="icon-miss">❌ Falta Salida:</span> Del turno que empezó el ${fmtD(entradaPendiente)} a las ${fmt(entradaPendiente)}. Se ha cortado automáticamente.`);
-                        
-                        countErr++;
-                        if (esHorarioSalidaMadrugada) {
-                            entradaPendiente = null;
-                        } else {
-                            entradaPendiente = actual; 
-                        }
+                        // Recuperación de estado
+                        if (esMadrugada) entradaPendiente = null; // Si el dato actual es madrugada, lo descartamos
+                        else entradaPendiente = actual; // Si es de día, es la nueva entrada
                     }
                 }
             }
 
+            // Cerrar último si quedó pendiente
             if (entradaPendiente) {
-                html += filaError(entradaPendiente, "Incompleto (Fin de lista)");
-                logIncidencias.push(`<span class="icon-miss">❌ Turno Incompleto:</span> El último fichaje (${fmtD(entradaPendiente)} ${fmt(entradaPendiente)}) no tiene salida.`);
+                html += generarFila(entradaPendiente, null, 0, "ERROR", "Incompleto (Final de lista)");
             }
 
-            // RENDERIZAR
-            document.getElementById('granTotal').innerText = totalHoras.toFixed(2);
-            document.getElementById('resumenTexto').innerText = `Turnos ok: ${countOk} | Errores: ${countErr}`;
+            // Renderizar
             document.getElementById('cuerpoTabla').innerHTML = html;
+            mostrarErrores();
+            document.getElementById('resultado').style.display = 'block';
             
-            // Renderizar la lista de errores
-            const panelErrores = document.getElementById('panelErrores');
-            const listaErrores = document.getElementById('listaErrores');
+            // Forzar cálculo inicial
+            recalcularTotalGlobal();
+        }
+
+        function generarFila(ent, sal, horas, tipo, msg) {
+            let colorClass = "fila-ok";
+            let badgeHtml = `<span class="badge bg-ok">OK</span>`;
             
-            if (logIncidencias.length > 0) {
-                panelErrores.style.display = 'block';
-                listaErrores.innerHTML = logIncidencias.map(item => `<li>${item}</li>`).join('');
-            } else {
-                panelErrores.style.display = 'none';
+            let valEnt = ent ? fmtInput(ent) : "";
+            let valSal = sal ? fmtInput(sal) : "";
+            
+            let classEnt = ent ? "time-input" : "time-input input-error";
+            let classSal = sal ? "time-input" : "time-input input-error";
+
+            if (tipo === "ERROR") {
+                colorClass = "fila-error";
+                badgeHtml = `<span class="badge bg-err">REVISAR</span> <small style='color:#c0392b'>${msg}</small>`;
+            } else if (tipo === "WARNING") {
+                colorClass = "fila-warning";
+                badgeHtml = `<span class="badge bg-warn">IGNORADO</span> <small>${msg}</small>`;
+                classEnt = "time-input input-error"; 
             }
 
-            document.getElementById('resultado').style.display = 'block';
+            let fechaDisplay = ent ? fmtDate(ent) : (sal ? fmtDate(sal) : "??");
+
+            return `
+            <tr class="${colorClass}">
+                <td>${fechaDisplay}</td>
+                <td><input type="time" class="${classEnt}" value="${valEnt}" onchange="filaCambiada(this)"></td>
+                <td><input type="time" class="${classSal}" value="${valSal}" onchange="filaCambiada(this)"></td>
+                <td class="cell-horas">${tipo === "OK" ? horas.toFixed(2) : "0.00"}</td>
+                <td class="cell-estado">${badgeHtml}</td>
+            </tr>`;
+        }
+
+        function filaCambiada(input) {
+            let row = input.closest('tr');
+            let inputs = row.querySelectorAll('input');
+            let valEnt = inputs[0].value;
+            let valSal = inputs[1].value;
+            let cellHoras = row.querySelector('.cell-horas');
+            let cellEstado = row.querySelector('.cell-estado');
+
+            if(valEnt) inputs[0].classList.remove('input-error');
+            if(valSal) inputs[1].classList.remove('input-error');
+
+            if (valEnt && valSal) {
+                let minEnt = timeToMinutes(valEnt);
+                let minSal = timeToMinutes(valSal);
+                
+                // Corrección automática de madrugada: Si sale a las 02:00 habiendo entrado a las 20:00
+                if (minSal < minEnt) {
+                    minSal += 24 * 60; 
+                }
+
+                let diffHoras = (minSal - minEnt) / 60;
+                cellHoras.innerText = diffHoras.toFixed(2);
+                
+                row.className = "fila-fixed"; 
+                cellEstado.innerHTML = `<span class="badge bg-fix">MANUAL</span>`;
+            } else {
+                cellHoras.innerText = "0.00";
+            }
+            recalcularTotalGlobal();
+        }
+
+        function recalcularTotalGlobal() {
+            let total = 0;
+            let cells = document.querySelectorAll('.cell-horas');
+            cells.forEach(cell => {
+                let h = parseFloat(cell.innerText);
+                if (!isNaN(h)) total += h;
+            });
+            document.getElementById('granTotal').innerText = total.toFixed(2);
         }
 
         // --- UTILIDADES ---
-        function fmt(d) { return d.toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'}); }
-        function fmtD(d) { return d.toLocaleDateString('es-ES', {day:'2-digit', month:'2-digit', year:'numeric'}); }
-
-        function filaOk(ent, sal, h) {
-            let aviso = (ent.getDate() !== sal.getDate()) ? " <small style='color:#666'>(+1)</small>" : "";
-            return `<tr>
-                <td style="border-left: 4px solid #28a745;">${fmtD(ent)}</td>
-                <td>${fmt(ent)}</td>
-                <td>${fmt(sal)}${aviso}</td>
-                <td><strong>${h.toFixed(2)} h</strong></td>
-                <td><span class="badge bg-ok">OK</span></td>
-            </tr>`;
+        function timeToMinutes(timeStr) {
+            let parts = timeStr.split(':');
+            return parseInt(parts[0]) * 60 + parseInt(parts[1]);
         }
-
-        function filaError(ent, msg) {
-            return `<tr class="fila-error">
-                <td style="border-left: 4px solid #dc3545;">${fmtD(ent)}</td>
-                <td>${fmt(ent)}</td>
-                <td>--:--</td>
-                <td>--</td>
-                <td><span class="badge bg-err">ERROR</span> <span style="color:#dc3545; font-size:11px">${msg}</span></td>
-            </tr>`;
+        function fmtInput(d) {
+            let h = String(d.getHours()).padStart(2, '0');
+            let m = String(d.getMinutes()).padStart(2, '0');
+            return `${h}:${m}`;
         }
+        function fmtDate(d) { return d.toLocaleDateString('es-ES', {weekday: 'short', day:'2-digit', month:'2-digit', year:'2-digit'}); }
+        function fmtFull(d) { return d.toLocaleString('es-ES'); }
 
-        function filaWarning(d, msg) {
-            return `<tr class="fila-warning">
-                <td style="border-left: 4px solid #ffc107;">${fmtD(d)}</td>
-                <td>--:--</td>
-                <td>${fmt(d)}</td>
-                <td>--</td>
-                <td><span class="badge bg-warn">INFO</span> <span style="font-size:11px">${msg}</span></td>
-            </tr>`;
+        function mostrarErrores() {
+            const panel = document.getElementById('panelErrores');
+            const lista = document.getElementById('listaErrores');
+            if (incidencias.length > 0) {
+                panel.style.display = 'block';
+                lista.innerHTML = incidencias.map(i => `<li>${i}</li>`).join('');
+            } else {
+                panel.style.display = 'none';
+            }
         }
     </script>
 </body>
