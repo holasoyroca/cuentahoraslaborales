@@ -1,37 +1,47 @@
-# 🕒 Calculadora de Horas de Trabajo
+# 🕒 Control de Horas y Fichajes
 
-Esta es una herramienta sencilla diseñada para calcular las horas totales trabajadas a partir de un listado de fichajes (Excel, CSV o texto), sin necesidad de instalar programas complejos.
+Herramienta web sencilla y **autocontenida** (un solo archivo) diseñada para calcular horas trabajadas en entornos de hostelería o turnos rotativos. Soluciona automáticamente los problemas comunes de fichajes duplicados, turnos de madrugada y olvidos de entrada/salida.
 
-## 🚀 ¿Cómo se usa?
+> **Versión actual:** v12.0
+> **Tecnología:** HTML5 + JavaScript (Funciona offline en el navegador).
 
-1.  **Abre el archivo** `CalculadoraHoras.html` en tu navegador (Chrome, Edge, Firefox, etc.). No hace falta internet.
-2.  **Copia tus datos**: Ve a tu Excel o archivo de fichajes, selecciona todas las columnas con las fechas y horas, y cópialas (`Ctrl + C`).
-3.  **Pega los datos**: Ve a la calculadora, pincha en el recuadro blanco grande y pega (`Ctrl + V`).
-4.  **Calcula**: Pulsa el botón azul **"Calcular Horas"**.
+## 🚀 Características Principales
 
-## 🧠 ¿Cómo funciona la lógica interna?
+Esta herramienta no es una simple calculadora. Incluye lógica específica para corregir errores humanos habituales:
 
-A diferencia de una fórmula simple de Excel, este programa realiza varios pasos inteligentes para evitar errores comunes en hostelería:
+* **👤 Detección de Empleado:** Lee automáticamente el nombre de la persona en la segunda columna del archivo pegado.
+* **🧹 Filtro "Anti-Pánico" (Limpieza de Duplicados):** Si un empleado ficha dos veces seguidas por error (en un intervalo menor a 30 minutos), el sistema elimina el segundo fichaje automáticamente.
+* **🌙 Soporte para Turnos de Noche:** Calcula correctamente las horas aunque el turno empiece un día y termine al siguiente (ej: 20:00 a 02:00).
+* **🧠 Detección de Olvidos:** Si un turno dura demasiadas horas (>16h) o se junta con la mañana siguiente, el sistema detecta que falta un fichaje, corta el turno y te avisa.
+* **✍️ Edición Manual Interactiva:** Las horas que faltan aparecen en **rojo**. Puedes escribir la hora correcta directamente en la casilla y el total se recalcula en tiempo real.
 
-### 1. Ordenación Cronológica (El problema de la madrugada)
-Muchos sistemas fallan cuando fichas la salida a las 00:20 (madrugada), porque piensan que es el primer fichaje del día siguiente.
-* **Esta herramienta:** Lee todas las fechas, las mezcla y las ordena en una línea de tiempo única.
-* **Resultado:** Si entras el día 5 a las 20:00 y sales el día 6 a las 01:00, el programa entiende perfectamente que esa salida pertenece a la entrada anterior.
+## 📖 Instrucciones de Uso
 
-### 2. Escáner Inteligente
-El programa busca línea por línea cualquier cosa que parezca una fecha (`dd/mm/aaaa`) y una hora (`hh:mm`).
-* No importa si copias columnas extra (como el nombre o ID).
-* No importa si hay espacios raros o tabulaciones.
-* El programa ignora el texto basura y se queda solo con los tiempos.
+1.  **Descarga** el archivo `ControlHorario.html`.
+2.  Ábrelo con cualquier navegador web (Chrome, Edge, Firefox). No necesitas internet.
+3.  Ve a tu Excel o programa de fichajes.
+4.  **Selecciona todo** (Ctrl + A) y **copia** (Ctrl + C).
+5.  Pega los datos en el cuadro blanco de la herramienta.
+6.  Pulsa el botón azul **"Procesar Datos"**.
 
-### 3. Detección de Errores
-El sistema te avisará automáticamente en dos casos:
-* **Fichajes Impares:** Si se te olvidó fichar una entrada o una salida (tienes un número impar de registros), te avisará y descartará el último dato para no romper el cálculo.
-* **Turnos Sospechosos:** Si un turno dura más de **16 horas**, lo marcará en **ROJO** en la tabla. Esto suele indicar que alguien olvidó fichar la salida de un día y el sistema lo ha unido con la entrada del día siguiente.
+## 🛠️ Solución de Errores (Cajas Rojas)
 
-## 📋 Requisitos
-* Un navegador web moderno (Chrome, Edge, Safari).
-* Los datos deben contener fecha y hora (ejemplo: `25/12/2025 18:30`).
+Si el programa detecta un error (por ejemplo, alguien olvidó fichar la salida), verás una fila en rojo con el mensaje **ERROR**.
 
----
-*Herramienta creada para uso interno y facilitar el control horario.*
+1.  Haz clic en la casilla de la hora que falta (o la que está mal).
+2.  Escribe la hora correcta (ej: `01:30`) o selecciónala con el reloj.
+3.  Haz clic fuera.
+4.  La fila se pondrá en verde (**MANUAL**) y el total de horas se actualizará solo.
+
+## ⚙️ Lógica Interna (Algoritmo)
+
+El script sigue estas reglas de prioridad para evitar "efectos dominó" en los cálculos:
+
+1.  **Limpieza:** Se eliminan `rawTimestamps` duplicados (<30min).
+2.  **Madrugada (00:00 - 06:00):** Se asume siempre como hora de **SALIDA** obligatoria.
+3.  **Reset de Mañana:** Si hay una entrada abierta y el siguiente fichaje es al día siguiente pasadas las 06:00 AM, se considera una **NUEVA ENTRADA** (asumiendo que se olvidó fichar la salida anterior).
+
+## 📄 Licencia
+
+Este proyecto es de código abierto. Puedes usarlo y modificarlo libremente.
+Repositorio: [https://github.com/holasoyroca/cuentahoraslaborales](https://github.com/holasoyroca/cuentahoraslaborales)
