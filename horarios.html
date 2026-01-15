@@ -2,208 +2,240 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Calculadora Horas V3 </title>
+    <title>Calculadora V9 - Con Informe de Errores</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 20px auto; padding: 20px; background-color: #eef2f5; }
-        h1 { color: #2c3e50; }
-        .instrucciones { background: #fff; padding: 15px; border-left: 5px solid #007bff; margin-bottom: 20px; border-radius: 4px; }
-        textarea { width: 100%; height: 250px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; font-size: 13px; box-sizing: border-box;}
-        button { background-color: #007bff; color: white; padding: 15px 30px; border: none; border-radius: 4px; cursor: pointer; font-size: 18px; margin-top: 10px; font-weight: bold; }
-        button:hover { background-color: #0056b3; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 950px; margin: 20px auto; padding: 20px; background-color: #f4f6f8; }
+        h1 { color: #2c3e50; text-align: center; margin-bottom: 5px;}
+        p.subtitle { text-align: center; color: #666; font-size: 14px; margin-bottom: 20px; }
         
-        #log { font-family: monospace; color: #666; font-size: 12px; margin-top: 10px; white-space: pre-wrap; display: none; background: #eee; padding: 10px; }
+        .panel { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
         
-        #resultado { margin-top: 20px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: none; }
-        .total-box { font-size: 28px; font-weight: bold; color: #28a745; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+        textarea { width: 100%; height: 150px; padding: 12px; border: 1px solid #ced4da; border-radius: 6px; font-family: monospace; font-size: 13px; box-sizing: border-box; resize: vertical; }
+        textarea:focus { border-color: #80bdff; outline: none; box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25); }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
-        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #ddd; }
-        th { background-color: #f8f9fa; font-weight: bold; color: #495057; }
-        tr:nth-child(even) {background-color: #f8f9fa;}
-        tr:hover { background-color: #e9ecef; }
+        button { background-color: #007bff; color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: 600; width: 100%; transition: background 0.2s; margin-top: 10px;}
+        button:hover { background-color: #0069d9; }
+
+        .total-box { font-size: 36px; font-weight: 700; color: #2c3e50; text-align: center; margin-bottom: 5px; }
+        .subtotal { text-align: center; color: #6c757d; font-size: 14px; margin-bottom: 25px; }
+
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 10px; font-size: 14px; border: 1px solid #dee2e6; border-radius: 6px; overflow: hidden; }
+        th { background-color: #343a40; color: white; padding: 15px; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;}
+        td { padding: 12px 15px; border-bottom: 1px solid #dee2e6; color: #495057; vertical-align: middle; }
         
-        .alerta { color: #721c24; background-color: #f8d7da; padding: 15px; border-radius: 4px; margin-bottom: 20px; display: none; border: 1px solid #f5c6cb; }
-        .long-shift { color: #dc3545; font-weight: bold; }
+        /* Estados de tabla */
+        .fila-ok { background-color: #ffffff; }
+        .fila-ok:hover { background-color: #f8f9fa; }
+        .fila-error { background-color: #ffeef0; }
+        .fila-warning { background-color: #fff3cd; color: #856404; }
+        
+        .badge { display: inline-block; padding: 5px 10px; border-radius: 50px; font-size: 11px; font-weight: 700; color: white; text-transform: uppercase; letter-spacing: 0.5px;}
+        .bg-ok { background-color: #28a745; }
+        .bg-err { background-color: #dc3545; }
+        .bg-warn { background-color: #ffc107; color: #212529; }
+        
+        /* Panel de Informe de Errores */
+        .error-report {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #fff5f5;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            display: none; /* Se oculta si no hay errores */
+        }
+        .error-report h3 { margin-top: 0; color: #dc3545; font-size: 18px; display: flex; align-items: center; gap: 10px;}
+        .error-list { list-style: none; padding: 0; margin: 0; }
+        .error-list li { padding: 8px 0; border-bottom: 1px dashed #ffdbe0; font-size: 14px; color: #721c24; }
+        .error-list li:last-child { border-bottom: none; }
+        
+        .icon-dup { color: #856404; font-weight: bold; } /* Icono para duplicados */
+        .icon-miss { color: #dc3545; font-weight: bold; } /* Icono para falta salida */
+
     </style>
 </head>
 <body>
 
-    <h1>🕒 Calculadora de Horas </h1>
-    
-    <div class="instrucciones">
-        <p><strong>Instrucciones:</strong></p>
-        <ol>
-            <li>Abre el archivo .csv del USB.</li>
-            <li>Selecciona todo y <strong>copia</strong> (Ctrl + C).</li>
-            <li><strong>Pega</strong> en el recuadro de abajo (Ctrl + V).</li>
-            <li>Pulsa el botón azul.</li>
-        </ol>
+    <div class="panel">
+        <h1>📊 Calculadora V9 (Con Informe)</h1>
+        <p class="subtitle">Elimina duplicados, corrige turnos y genera un resumen de fallos al final.</p>
+        <textarea id="inputData" placeholder="Pega aquí los datos..."></textarea>
+        <button onclick="procesarDatos()">Calcular Horas</button>
     </div>
-    
-    <textarea id="inputData" placeholder="Pega aquí los datos..."></textarea>
-    <br>
-    <button onclick="ejecutarCalculo()">Calcular Horas</button>
-    
-    <div id="log"></div>
 
-    <div id="resultado">
-        <div id="alerta" class="alerta"></div>
-        <div class="total-box" id="granTotal"></div>
-        
-        <h3>Desglose de Turnos</h3>
-        <table id="tablaDias">
+    <div id="resultado" class="panel" style="display:none;">
+        <div class="total-box"><span id="granTotal">0.00</span> h</div>
+        <div class="subtotal" id="resumenTexto"></div>
+
+        <table id="tablaResultados">
             <thead>
                 <tr>
-                    <th>Fecha Entrada</th>
-                    <th>Hora Ent.</th>
-                    <th>Hora Sal.</th>
+                    <th>Fecha</th>
+                    <th>Entrada</th>
+                    <th>Salida</th>
                     <th>Duración</th>
+                    <th>Estado</th>
                 </tr>
             </thead>
             <tbody id="cuerpoTabla"></tbody>
         </table>
+
+        <div id="panelErrores" class="error-report">
+            <h3>📝 Resumen de Incidencias</h3>
+            <ul id="listaErrores" class="error-list"></ul>
+        </div>
     </div>
 
     <script>
-	// Fernando Roca: https://github.com/holasoyroca/
+        function procesarDatos() {
+            const text = document.getElementById('inputData').value;
+            const regexFull = /(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4}).*?(\d{1,2}):(\d{2})(?::(\d{2}))?/;
+            const lines = text.split(/\r?\n/);
+            let rawTimestamps = [];
+            let logIncidencias = []; // Array para guardar los mensajes de error
 
-        function log(msg) {
-            const logDiv = document.getElementById('log');
-            logDiv.style.display = 'block';
-            logDiv.innerText += msg + "\n";
-            console.log(msg);
+            // 1. LEER TODO
+            for (let line of lines) {
+                const match = line.match(regexFull);
+                if (match) {
+                    const d = new Date(match[3], match[2] - 1, match[1], match[4], match[5], match[6] || 0);
+                    rawTimestamps.push(d);
+                }
+            }
+
+            if (rawTimestamps.length === 0) {
+                alert("No encontré fechas válidas.");
+                return;
+            }
+
+            // 2. ORDENAR CRONOLÓGICAMENTE
+            rawTimestamps.sort((a, b) => a - b);
+
+            // --- FILTRO ANTI-PÁNICO (DUPLICADOS) ---
+            let timestamps = [];
+            
+            if (rawTimestamps.length > 0) {
+                timestamps.push(rawTimestamps[0]);
+                
+                for (let i = 1; i < rawTimestamps.length; i++) {
+                    let actual = rawTimestamps[i];
+                    let previo = timestamps[timestamps.length - 1];
+                    let diffMinutos = (actual - previo) / (1000 * 60);
+                    
+                    if (diffMinutos < 30) {
+                        // LOG DE DUPLICADO
+                        logIncidencias.push(`<span class="icon-dup">🧹 Duplicado eliminado:</span> El ${fmtD(actual)} a las ${fmt(actual)} (demasiado cerca del anterior).`);
+                    } else {
+                        timestamps.push(actual);
+                    }
+                }
+            }
+
+            // 3. LÓGICA PRINCIPAL
+            let html = "";
+            let totalHoras = 0;
+            let entradaPendiente = null;
+            let countOk = 0;
+            let countErr = 0;
+
+            for (let i = 0; i < timestamps.length; i++) {
+                let actual = timestamps[i];
+                let hora = actual.getHours();
+                let esHorarioSalidaMadrugada = (hora >= 0 && hora < 6);
+
+                if (entradaPendiente == null) {
+                    if (esHorarioSalidaMadrugada) {
+                        html += filaWarning(actual, "Salida suelta (Madrugada)");
+                        logIncidencias.push(`<span class="icon-dup">⚠️ Salida ignorada:</span> ${fmtD(actual)} a las ${fmt(actual)} (es de madrugada y no había entrada previa).`);
+                    } else {
+                        entradaPendiente = actual;
+                    }
+                } else {
+                    let diffHoras = (actual - entradaPendiente) / (1000 * 60 * 60);
+                    let esMismoDia = actual.getDate() === entradaPendiente.getDate();
+                    let esSalidaValida = true;
+
+                    if (!esMismoDia && hora >= 6) { esSalidaValida = false; }
+                    if (diffHoras > 16) { esSalidaValida = false; }
+
+                    if (esSalidaValida) {
+                        html += filaOk(entradaPendiente, actual, diffHoras);
+                        totalHoras += diffHoras;
+                        countOk++;
+                        entradaPendiente = null; 
+                    } else {
+                        html += filaError(entradaPendiente, "Falta fichar salida");
+                        
+                        // LOG DE ERROR
+                        logIncidencias.push(`<span class="icon-miss">❌ Falta Salida:</span> Del turno que empezó el ${fmtD(entradaPendiente)} a las ${fmt(entradaPendiente)}. Se ha cortado automáticamente.`);
+                        
+                        countErr++;
+                        if (esHorarioSalidaMadrugada) {
+                            entradaPendiente = null;
+                        } else {
+                            entradaPendiente = actual; 
+                        }
+                    }
+                }
+            }
+
+            if (entradaPendiente) {
+                html += filaError(entradaPendiente, "Incompleto (Fin de lista)");
+                logIncidencias.push(`<span class="icon-miss">❌ Turno Incompleto:</span> El último fichaje (${fmtD(entradaPendiente)} ${fmt(entradaPendiente)}) no tiene salida.`);
+            }
+
+            // RENDERIZAR
+            document.getElementById('granTotal').innerText = totalHoras.toFixed(2);
+            document.getElementById('resumenTexto').innerText = `Turnos ok: ${countOk} | Errores: ${countErr}`;
+            document.getElementById('cuerpoTabla').innerHTML = html;
+            
+            // Renderizar la lista de errores
+            const panelErrores = document.getElementById('panelErrores');
+            const listaErrores = document.getElementById('listaErrores');
+            
+            if (logIncidencias.length > 0) {
+                panelErrores.style.display = 'block';
+                listaErrores.innerHTML = logIncidencias.map(item => `<li>${item}</li>`).join('');
+            } else {
+                panelErrores.style.display = 'none';
+            }
+
+            document.getElementById('resultado').style.display = 'block';
         }
 
-        function ejecutarCalculo() {
-            // Limpiar logs y resultados anteriores
-            document.getElementById('log').innerText = "";
-            document.getElementById('cuerpoTabla').innerHTML = "";
-            document.getElementById('resultado').style.display = 'none';
-            document.getElementById('alerta').style.display = 'none';
+        // --- UTILIDADES ---
+        function fmt(d) { return d.toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'}); }
+        function fmtD(d) { return d.toLocaleDateString('es-ES', {day:'2-digit', month:'2-digit', year:'numeric'}); }
 
-            try {
-                const text = document.getElementById('inputData').value;
-                if (!text.trim()) {
-                    alert("Por favor, pega los datos en el recuadro blanco.");
-                    return;
-                }
+        function filaOk(ent, sal, h) {
+            let aviso = (ent.getDate() !== sal.getDate()) ? " <small style='color:#666'>(+1)</small>" : "";
+            return `<tr>
+                <td style="border-left: 4px solid #28a745;">${fmtD(ent)}</td>
+                <td>${fmt(ent)}</td>
+                <td>${fmt(sal)}${aviso}</td>
+                <td><strong>${h.toFixed(2)} h</strong></td>
+                <td><span class="badge bg-ok">OK</span></td>
+            </tr>`;
+        }
 
-                // Separar por líneas (funciona con Excel, CSV, texto plano)
-                const lines = text.split(/\r?\n/);
-                let timestamps = [];
-                
-                log("Analizando " + lines.length + " líneas de texto...");
+        function filaError(ent, msg) {
+            return `<tr class="fila-error">
+                <td style="border-left: 4px solid #dc3545;">${fmtD(ent)}</td>
+                <td>${fmt(ent)}</td>
+                <td>--:--</td>
+                <td>--</td>
+                <td><span class="badge bg-err">ERROR</span> <span style="color:#dc3545; font-size:11px">${msg}</span></td>
+            </tr>`;
+        }
 
-                // Regex para Fecha (dd/mm/yyyy o dd-mm-yyyy)
-                const dateRegex = /(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})/;
-                // Regex para Hora (hh:mm:ss o hh:mm)
-                const timeRegex = /(\d{1,2}):(\d{2})(?::(\d{2}))?/;
-
-                for (let i = 0; i < lines.length; i++) {
-                    const line = lines[i].trim();
-                    if (!line) continue;
-
-                    const dateMatch = line.match(dateRegex);
-                    const timeMatch = line.match(timeRegex);
-
-                    // Solo procesamos la línea si encontramos AMBOS: fecha y hora
-                    if (dateMatch && timeMatch) {
-                        const dia = parseInt(dateMatch[1]);
-                        const mes = parseInt(dateMatch[2]) - 1; // JS meses 0-11
-                        const ano = parseInt(dateMatch[3]);
-                        
-                        const hora = parseInt(timeMatch[1]);
-                        const min = parseInt(timeMatch[2]);
-                        const seg = timeMatch[3] ? parseInt(timeMatch[3]) : 0;
-
-                        const fechaObj = new Date(ano, mes, dia, hora, min, seg);
-                        timestamps.push(fechaObj);
-                    }
-                }
-
-                log("Se encontraron " + timestamps.length + " fechas válidas.");
-
-                if (timestamps.length === 0) {
-                    alert("No se encontraron fechas válidas. \nAsegúrate de que el texto contiene fechas (ej: 25/12/2025) y horas (ej: 18:00:00).");
-                    return;
-                }
-
-                // 2. ORDENAR (CRUCIAL PARA TURNO DE NOCHE)
-                timestamps.sort((a, b) => a - b);
-
-                // 3. CALCULAR PARES
-                let totalMs = 0;
-                let htmlRows = "";
-                let errores = 0;
-
-                for (let i = 0; i < timestamps.length; i += 2) {
-                    // Si queda un fichaje suelto al final
-                    if (i + 1 >= timestamps.length) {
-                        log("⚠️ Fichaje suelto al final ignorado: " + timestamps[i].toLocaleString());
-                        break;
-                    }
-
-                    let entrada = timestamps[i];
-                    let salida = timestamps[i+1];
-
-                    let diff = salida - entrada; // milisegundos
-                    let horas = diff / (1000 * 60 * 60);
-
-                    // Detección de errores (Turnos > 16h)
-                    let claseFila = "";
-                    let aviso = "";
-                    if (horas > 16 || horas < 0) {
-                        claseFila = "class='long-shift'";
-                        aviso = " ⚠️ (Revisar)";
-                        errores++;
-                    }
-
-                    totalMs += diff;
-
-                    // Formato para tabla
-                    const dateOpts = { day: '2-digit', month: '2-digit', year: 'numeric' };
-                    const timeOpts = { hour: '2-digit', minute: '2-digit' };
-                    
-                    let fechaStr = entrada.toLocaleDateString('es-ES', dateOpts);
-                    let hEntrada = entrada.toLocaleTimeString('es-ES', timeOpts);
-                    let hSalida = salida.toLocaleTimeString('es-ES', timeOpts);
-
-                    if (entrada.getDate() !== salida.getDate()) {
-                        hSalida += " (+1)";
-                    }
-
-                    htmlRows += `
-                        <tr ${claseFila}>
-                            <td>${fechaStr}</td>
-                            <td>${hEntrada}</td>
-                            <td>${hSalida}${aviso}</td>
-                            <td><strong>${horas.toFixed(2)} h</strong></td>
-                        </tr>
-                    `;
-                }
-
-                const totalHoras = totalMs / (1000 * 60 * 60);
-
-                // MOSTRAR RESULTADOS
-                document.getElementById('granTotal').innerText = "Total: " + totalHoras.toFixed(2) + " Horas";
-                document.getElementById('cuerpoTabla').innerHTML = htmlRows;
-                document.getElementById('resultado').style.display = 'block';
-
-                const divAlerta = document.getElementById('alerta');
-                if (timestamps.length % 2 !== 0) {
-                    divAlerta.innerHTML = "⚠️ <strong>Número impar de fichajes (" + timestamps.length + ").</strong><br>Falta una entrada o una salida. El último dato se ha ignorado.";
-                    divAlerta.style.display = 'block';
-                } else if (errores > 0) {
-                    divAlerta.innerHTML = "⚠️ Se detectaron turnos extrañamente largos (marcados en rojo). Posible olvido de fichaje.";
-                    divAlerta.style.display = 'block';
-                }
-
-            } catch (err) {
-                alert("Ocurrió un error inesperado: " + err.message);
-                log("Error: " + err.message);
-            }
+        function filaWarning(d, msg) {
+            return `<tr class="fila-warning">
+                <td style="border-left: 4px solid #ffc107;">${fmtD(d)}</td>
+                <td>--:--</td>
+                <td>${fmt(d)}</td>
+                <td>--</td>
+                <td><span class="badge bg-warn">INFO</span> <span style="font-size:11px">${msg}</span></td>
+            </tr>`;
         }
     </script>
-
 </body>
 </html>
