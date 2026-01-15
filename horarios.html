@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Calculadora Horas V3 </title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 20px auto; padding: 20px; background-color: #eef2f5; }
+        h1 { color: #2c3e50; }
+        .instrucciones { background: #fff; padding: 15px; border-left: 5px solid #007bff; margin-bottom: 20px; border-radius: 4px; }
+        textarea { width: 100%; height: 250px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; font-size: 13px; box-sizing: border-box;}
+        button { background-color: #007bff; color: white; padding: 15px 30px; border: none; border-radius: 4px; cursor: pointer; font-size: 18px; margin-top: 10px; font-weight: bold; }
+        button:hover { background-color: #0056b3; }
+        
+        #log { font-family: monospace; color: #666; font-size: 12px; margin-top: 10px; white-space: pre-wrap; display: none; background: #eee; padding: 10px; }
+        
+        #resultado { margin-top: 20px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: none; }
+        .total-box { font-size: 28px; font-weight: bold; color: #28a745; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f9fa; font-weight: bold; color: #495057; }
+        tr:nth-child(even) {background-color: #f8f9fa;}
+        tr:hover { background-color: #e9ecef; }
+        
+        .alerta { color: #721c24; background-color: #f8d7da; padding: 15px; border-radius: 4px; margin-bottom: 20px; display: none; border: 1px solid #f5c6cb; }
+        .long-shift { color: #dc3545; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h1>🕒 Calculadora de Horas </h1>
+    
+    <div class="instrucciones">
+        <p><strong>Instrucciones:</strong></p>
+        <ol>
+            <li>Abre el archivo .csv del USB.</li>
+            <li>Selecciona todo y <strong>copia</strong> (Ctrl + C).</li>
+            <li><strong>Pega</strong> en el recuadro de abajo (Ctrl + V).</li>
+            <li>Pulsa el botón azul.</li>
+        </ol>
+    </div>
+    
+    <textarea id="inputData" placeholder="Pega aquí los datos..."></textarea>
+    <br>
+    <button onclick="ejecutarCalculo()">Calcular Horas</button>
+    
+    <div id="log"></div>
+
+    <div id="resultado">
+        <div id="alerta" class="alerta"></div>
+        <div class="total-box" id="granTotal"></div>
+        
+        <h3>Desglose de Turnos</h3>
+        <table id="tablaDias">
+            <thead>
+                <tr>
+                    <th>Fecha Entrada</th>
+                    <th>Hora Ent.</th>
+                    <th>Hora Sal.</th>
+                    <th>Duración</th>
+                </tr>
+            </thead>
+            <tbody id="cuerpoTabla"></tbody>
+        </table>
+    </div>
+
+    <script>
+	// Fernando Roca: https://github.com/holasoyroca/
+
+        function log(msg) {
+            const logDiv = document.getElementById('log');
+            logDiv.style.display = 'block';
+            logDiv.innerText += msg + "\n";
+            console.log(msg);
+        }
+
+        function ejecutarCalculo() {
+            // Limpiar logs y resultados anteriores
+            document.getElementById('log').innerText = "";
+            document.getElementById('cuerpoTabla').innerHTML = "";
+            document.getElementById('resultado').style.display = 'none';
+            document.getElementById('alerta').style.display = 'none';
+
+            try {
+                const text = document.getElementById('inputData').value;
+                if (!text.trim()) {
+                    alert("Por favor, pega los datos en el recuadro blanco.");
+                    return;
+                }
+
+                // Separar por líneas (funciona con Excel, CSV, texto plano)
+                const lines = text.split(/\r?\n/);
+                let timestamps = [];
+                
+                log("Analizando " + lines.length + " líneas de texto...");
+
+                // Regex para Fecha (dd/mm/yyyy o dd-mm-yyyy)
+                const dateRegex = /(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})/;
+                // Regex para Hora (hh:mm:ss o hh:mm)
+                const timeRegex = /(\d{1,2}):(\d{2})(?::(\d{2}))?/;
+
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+
+                    const dateMatch = line.match(dateRegex);
+                    const timeMatch = line.match(timeRegex);
+
+                    // Solo procesamos la línea si encontramos AMBOS: fecha y hora
+                    if (dateMatch && timeMatch) {
+                        const dia = parseInt(dateMatch[1]);
+                        const mes = parseInt(dateMatch[2]) - 1; // JS meses 0-11
+                        const ano = parseInt(dateMatch[3]);
+                        
+                        const hora = parseInt(timeMatch[1]);
+                        const min = parseInt(timeMatch[2]);
+                        const seg = timeMatch[3] ? parseInt(timeMatch[3]) : 0;
+
+                        const fechaObj = new Date(ano, mes, dia, hora, min, seg);
+                        timestamps.push(fechaObj);
+                    }
+                }
+
+                log("Se encontraron " + timestamps.length + " fechas válidas.");
+
+                if (timestamps.length === 0) {
+                    alert("No se encontraron fechas válidas. \nAsegúrate de que el texto contiene fechas (ej: 25/12/2025) y horas (ej: 18:00:00).");
+                    return;
+                }
+
+                // 2. ORDENAR (CRUCIAL PARA TURNO DE NOCHE)
+                timestamps.sort((a, b) => a - b);
+
+                // 3. CALCULAR PARES
+                let totalMs = 0;
+                let htmlRows = "";
+                let errores = 0;
+
+                for (let i = 0; i < timestamps.length; i += 2) {
+                    // Si queda un fichaje suelto al final
+                    if (i + 1 >= timestamps.length) {
+                        log("⚠️ Fichaje suelto al final ignorado: " + timestamps[i].toLocaleString());
+                        break;
+                    }
+
+                    let entrada = timestamps[i];
+                    let salida = timestamps[i+1];
+
+                    let diff = salida - entrada; // milisegundos
+                    let horas = diff / (1000 * 60 * 60);
+
+                    // Detección de errores (Turnos > 16h)
+                    let claseFila = "";
+                    let aviso = "";
+                    if (horas > 16 || horas < 0) {
+                        claseFila = "class='long-shift'";
+                        aviso = " ⚠️ (Revisar)";
+                        errores++;
+                    }
+
+                    totalMs += diff;
+
+                    // Formato para tabla
+                    const dateOpts = { day: '2-digit', month: '2-digit', year: 'numeric' };
+                    const timeOpts = { hour: '2-digit', minute: '2-digit' };
+                    
+                    let fechaStr = entrada.toLocaleDateString('es-ES', dateOpts);
+                    let hEntrada = entrada.toLocaleTimeString('es-ES', timeOpts);
+                    let hSalida = salida.toLocaleTimeString('es-ES', timeOpts);
+
+                    if (entrada.getDate() !== salida.getDate()) {
+                        hSalida += " (+1)";
+                    }
+
+                    htmlRows += `
+                        <tr ${claseFila}>
+                            <td>${fechaStr}</td>
+                            <td>${hEntrada}</td>
+                            <td>${hSalida}${aviso}</td>
+                            <td><strong>${horas.toFixed(2)} h</strong></td>
+                        </tr>
+                    `;
+                }
+
+                const totalHoras = totalMs / (1000 * 60 * 60);
+
+                // MOSTRAR RESULTADOS
+                document.getElementById('granTotal').innerText = "Total: " + totalHoras.toFixed(2) + " Horas";
+                document.getElementById('cuerpoTabla').innerHTML = htmlRows;
+                document.getElementById('resultado').style.display = 'block';
+
+                const divAlerta = document.getElementById('alerta');
+                if (timestamps.length % 2 !== 0) {
+                    divAlerta.innerHTML = "⚠️ <strong>Número impar de fichajes (" + timestamps.length + ").</strong><br>Falta una entrada o una salida. El último dato se ha ignorado.";
+                    divAlerta.style.display = 'block';
+                } else if (errores > 0) {
+                    divAlerta.innerHTML = "⚠️ Se detectaron turnos extrañamente largos (marcados en rojo). Posible olvido de fichaje.";
+                    divAlerta.style.display = 'block';
+                }
+
+            } catch (err) {
+                alert("Ocurrió un error inesperado: " + err.message);
+                log("Error: " + err.message);
+            }
+        }
+    </script>
+
+</body>
+</html>
